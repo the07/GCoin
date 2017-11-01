@@ -146,4 +146,144 @@ class Blockchain(object):
                 unconfirmed_transactions_json.get('signature')
             )
 
-            
+            if unconfirmed_transaction.tx_hash != unconfirmed_transactions_json.get('tx_hash'):
+                continue
+            if unconfirmed_transaction.tx_hash in [transaction.tx_hash for transaction in transactions]:
+                continue
+            if self.find_duplicate_transaction(unconfirmed_transaction.tx_hash):
+                continue
+            if not unconfirmed_transaction.verify():
+                continue
+
+            transactions.append(unconfirmed_transaction)
+
+        if len(transactions) < 1:
+            return None
+
+        reward_transaction = Transaction(
+            "0",
+            reward_address,
+            self.get_reward(new_block_id),
+            "0"
+        )
+
+        transactions.append(reward_transaction)
+
+        timestamp = int(time.time())
+
+        i = 0
+        block = Block(new_block_id, transactions, previous_hash, timestamp, i)
+        while block.current_hash[:4] != "0000":
+            latest_block = self.get_latest_block
+            if latest_block.index >= new_block_id or latest_block.current_hash != previous_hash:
+                # Next block in sequence was mined by another block
+                # identify in-progress transactions that are not included in the latest_block and place them back in
+                # the unconfirmed transaction pool.
+                for transaction in transactions[:-1]:
+                    if transaction not in latest_block.transactions:
+                        self.push_unconfirmed_transaction(transaction)
+                return None
+            i += 1
+            block.nonce = i
+        return block
+
+    def get_transaction_history(self, address):
+        transactions = []
+        for block in self.blocks:
+            for transaction in block.transactions:
+                if transaction.source == address or transaction.destination == address:
+                    transactions.append(transaction)
+        return transactions
+
+    def get_balance(self, address):
+        balance = 0
+        for block in self.blocks:
+            for transaction in block.transactions:
+                if transaction.source == address:
+                    balance -= transaction.amount
+                if transaction.destination == address:
+                    balance += transaction.amount
+        return balance
+
+    def find_duplicate_transaction(self, transaction_hash):
+        for block in self.blocks:
+            for transaction in block.transactions:
+                if transaction.tx_hash == transaction_hash:
+                    return block.index
+        return False
+
+    def recycle_transactions(self, block):
+        for transaction in block.transactions[:-1]:
+            if not self.find_duplicate_transaction(transaction.tx_hash):
+                self.push_unconfirmed_transaction(transaction)
+        return
+
+    def validate_chain(self):
+        try:
+            for block in self.blocks:
+                self.validate_block(block)
+        except BlockchainException as bce:
+            raise
+        return True
+
+    def get_reward(self, index):
+        # 50 coins per block, halved every 1000 blocks
+        reward = self.INITIAL_COINS_PER_BLOCK
+        for i in range(1, ((index / self.HALVING_FREQUENCY) + 1)):
+            reward = reward / 2
+        return reward
+
+    def get_size(self):
+        return len(self.blocks)
+
+    def get_latest_block(self):
+        try:
+            return self.blocks[-1]
+        except IndexError:
+            return None
+
+    def get_block_by_index(self, index):
+        try:
+            return self.blocks[index]
+        except IndexError:
+            return None
+
+    def get_all_blocks(self):
+        return self.blocks
+
+    def get_block_range(self, start_index, stop_index):
+        return self.blocks[start_index:stop_index+1]
+
+    def get_all_unconfirmed_transactions(self):
+        return self.unconfirmed_transactions
+
+    def pop_next_uncomfirmed_transaction(self):
+        try:
+            with self.unconfirmed_transactions_lock:
+                return self.unconfirmed_transactions.pop(0)
+        except IndexError:
+            return None
+
+    def push_unconfirmed_transaction(self, transaction):
+        with self.unconfirmed_transactions_lock:
+            self.unconfirmed_transactions.append(transaction)
+            return True
+
+    def verify_signature(self, signature, message, public_key):
+        return pyelliptic.ECC(curve='secp256k1', pubkey=public_key.decode('hex')).verify(signature.decode('hex'), message)
+
+    def generate_signable_transaction(self, from_address, to_address, amount, timestamp):
+        return ":".join((from_address, to_address, amount, timestamp))
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
+if __name__ == "__main__":
+    pass

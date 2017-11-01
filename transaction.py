@@ -57,11 +57,11 @@ class Transaction(object):
         """
 
         data = {
-            "source" = self._source,
-            "destination" = self._destination,
-            "amount" = self._amount,
-            "timestamp" = self._timestamp,
-            "signature" = self._signature
+            "source": self._source,
+            "destination": self._destination,
+            "amount": self._amount,
+            "timestamp": self._timestamp,
+            "signature": self._signature
         }
 
         data_json = json.dumps(data, sort_keys=True)
