@@ -5,7 +5,7 @@ from blockchain import *
 from klein import Klein
 from transaction import *
 
-FULL_NODE_PORT = "30013"
+FULL_NODE_PORT = "30016"
 NODES_URL = "http://{}:{}/nodes"
 TRANSACTIONS_URL = "http://{}:{}/transactions"
 BLOCK_URL = "http://{}:{}/block/{}"
@@ -74,6 +74,7 @@ class FullNode(NodeMixin):
     app = Klein()
 
     def __init__(self, host, reward_address, block_path=None):
+        print ('Initializing full node')
         self.host = host
         self.request_nodes_from_all()
         self.reward_address = reward_address
@@ -83,7 +84,7 @@ class FullNode(NodeMixin):
             self.blockchain = Blockchain()
         else:
             self.load_blockchain(block_path)
-
+        print ('Full Node Initialised')
         thread = threading.Thread(target=self.mine, args=())
         thread.daemon = True
         thread.start()
@@ -181,7 +182,7 @@ class FullNode(NodeMixin):
             latest_hash = latest_block.current_hash
             latest_index = latest_block.index
 
-            block = self.blockchain.mine_block(self, reward_address)
+            block = self.blockchain.mine_block(self.reward_address)
             if not block:
                 continue
             statuses = self.broadcast_block(block)

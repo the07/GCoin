@@ -23,7 +23,7 @@ class Blockchain(object):
     def __init__(self, blocks=None):
         self.unconfirmed_transactions_lock = threading.Lock()
         self.blocks_lock = threading.Lock()
-        if blocks in None:
+        if blocks is None:
             genesis_block = self.get_genesis_block()
             self.add_block(genesis_block)
         else:
@@ -31,19 +31,22 @@ class Blockchain(object):
                 self.add_block(block)
 
     def get_genesis_block(self):
+
+        print('Creating Genesis Transaction')
         genesis_transaction_one = Transaction(
             "0",
-            "0409eb9224f408ece7163f40a33274d99ab6b3f60e41b447dd45fcc6371f57b88d9d3583c358b1ea8aea4422d17c57de1418554d3a1cd620ca4cb296357888ea596",
+            "049b41d21537542786bdd43647303d3b2bf46ca83e5e63c95b72870f06b094a816b9f11bb07857a46b0bfd563af176e2b0ff9094b74319395dca2a42e6a887675f",
             1000
         )
         genesis_transaction_two = Transaction(
             "0",
-            "0466f992cd361e24e4fa0eeca9a7ddbea1d257a2053dbe16aeb36ac155679a797bf89776903290d7c93e4b5ba49968fbf8ab8a49190f3d7cafe11cc6e925e489f6",
+            "049b41d21537542786bdd43647303d3b2bf46ca83e5e63c95b72870f06b094a816b9f11bb07857a46b0bfd563af176e2b0ff9094b74319395dca2a42e6a887675f",
             1000
         )
 
         genesis_transactions = [genesis_transaction_one, genesis_transaction_two]
         genesis_block = Block(0, genesis_transactions, 0,0,0)
+        print ('Genesis block: {} created on: {}'.format(genesis_block, time.time()))
         return genesis_block
 
     def _check_genesis_block(self, block):

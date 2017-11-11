@@ -65,7 +65,7 @@ class Block(object):
             "index" : self._index,
             "previous_hash" : self._previous_hash,
             "timestamp" : self._timestamp,
-            "transactions" : self._transactions,
+            "transactions" : [t.tx_hash for t in self._transactions],
             "nonce" : self._nonce
         }
 

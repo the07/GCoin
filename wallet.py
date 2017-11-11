@@ -30,13 +30,13 @@ class Client(NodeMixin):
         return ecc
 
     def get_pubkey(self, hex=True):
-        return self.ecc.get_pubkey().encode('hex') if hex else self.ecc.get_pubkey()
+        return self.ecc.get_pubkey().hex() if hex else self.ecc.get_pubkey()
 
     def get_privkey(self, hex=True):
-        return self.ecc.get_privkey().encode('hex') if hex else self.ecc.get_privkey()
+        return self.ecc.get_privkey().hex() if hex else self.ecc.get_privkey()
 
     def sign(self, message):
-        return self.ecc.sign(message).encode('hex')
+        return self.ecc.sign(message).hex()
 
     def verify(self, signature, message, public_key=None):
         if public_key is not None:
